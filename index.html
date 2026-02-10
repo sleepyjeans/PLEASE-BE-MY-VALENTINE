@@ -128,7 +128,6 @@
 </head>
 <body>
 
-  <!-- Hearts -->
   <script>
     // pixel click sound
     function playPixelSound() {
@@ -177,31 +176,73 @@
       }
     }
 
-    // music toggle - FIXED VERSION
-    const music = new Audio('https://cdn.freesound.org/previews/642/642620_3797507-lq.mp3');
-    music.loop = true;
-    music.volume = 0.3; // Set to comfortable volume
+    // MUSIC GENERATION using Web Audio API
+    let audioContext;
+    let musicOscillator;
+    let musicGain;
     let musicOn = false;
+    let currentNote = 0;
+
+    // Simple romantic melody (frequencies in Hz)
+    const melody = [
+      523.25, 587.33, 659.25, 587.33, // C D E D
+      523.25, 587.33, 659.25, 698.46, // C D E F
+      783.99, 659.25, 587.33, 523.25, // G E D C
+      587.33, 523.25, 466.16, 523.25  // D C B C
+    ];
+
+    function playNote(frequency) {
+      if (!audioContext) return;
+      
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.value = frequency;
+      
+      gain.gain.setValueAtTime(0, audioContext.currentTime);
+      gain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.4);
+      gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.start(audioContext.currentTime);
+      osc.stop(audioContext.currentTime + 0.5);
+    }
+
+    function startMusic() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      function playNextNote() {
+        if (!musicOn) return;
+        
+        playNote(melody[currentNote]);
+        currentNote = (currentNote + 1) % melody.length;
+        
+        setTimeout(playNextNote, 500); // Play note every 500ms
+      }
+      
+      playNextNote();
+    }
+
+    function stopMusic() {
+      musicOn = false;
+    }
 
     function toggleMusic(btn) {
       if (!musicOn) {
-        music.play().catch(err => {
-          console.log('Music playback failed:', err);
-          alert('Click the page first to enable music!');
-        });
+        musicOn = true;
+        startMusic();
         btn.innerText = 'music: on';
       } else {
-        music.pause();
+        stopMusic();
         btn.innerText = 'music: off';
       }
-      musicOn = !musicOn;
     }
-
-    // Alternative: Add user interaction to unlock audio
-    document.addEventListener('click', function enableAudio() {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      audioContext.resume();
-    }, { once: true });
   </script>
 
   <!-- Popup -->
@@ -211,7 +252,7 @@
     <p class="subtext">this is not optional.</p>
     <div class="buttons">
       <button onclick="playPixelSound(); explodeHearts(); alert('VALENTINE ACCEPTED 💗 no refunds')">yes</button>
-      <button onclick="playPixelSound(); explodeHearts(); alert('correct 💞 destiny locked in')">yes</button>
+      <button onclick="playPixelSound(); explodeHearts(); alert('theres no other choice 💞 ')">yes</button>
     </div>
   </div>
 

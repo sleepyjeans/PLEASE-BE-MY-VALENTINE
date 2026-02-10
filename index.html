@@ -177,14 +177,18 @@
       }
     }
 
-    // music toggle
-    const music = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_7c91e3cfd2.mp3');
+    // music toggle - FIXED VERSION
+    const music = new Audio('https://cdn.freesound.org/previews/642/642620_3797507-lq.mp3');
     music.loop = true;
+    music.volume = 0.3; // Set to comfortable volume
     let musicOn = false;
 
     function toggleMusic(btn) {
       if (!musicOn) {
-        music.play();
+        music.play().catch(err => {
+          console.log('Music playback failed:', err);
+          alert('Click the page first to enable music!');
+        });
         btn.innerText = 'music: on';
       } else {
         music.pause();
@@ -192,6 +196,12 @@
       }
       musicOn = !musicOn;
     }
+
+    // Alternative: Add user interaction to unlock audio
+    document.addEventListener('click', function enableAudio() {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContext.resume();
+    }, { once: true });
   </script>
 
   <!-- Popup -->
